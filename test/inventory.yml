@@ -1,0 +1,39 @@
+# Fixture: a stock in the shape the plugin reads. The subject-specific keys
+# (voltage, interface) are here on purpose — they must survive in `extra`.
+items:
+  - id: esp32
+    name: ESP32 dev board
+    kind: board
+    qty: 1
+    voltage: 3v3
+    interface: none
+
+  - id: red-led
+    name: Red LED 5mm
+    kind: output
+    qty: 5
+    consumable: true
+    voltage: 3v3
+    interface: digital
+
+  - id: ldr
+    name: Photoresistor module
+    kind: input
+    qty: 1
+    voltage: 3v3
+    interface: analog
+
+  - id: last-one
+    name: Nearly out of these
+    kind: passive
+    qty: 1
+    consumable: true
+
+  - id: rp2040
+    name: RP2040-Zero
+    kind: board
+    qty: 1
+    blocked: true
+    blockedReason: |
+      Came without soldered headers.
+      Second line is ignored on purpose.
