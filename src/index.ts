@@ -20,6 +20,28 @@ export interface ResolvedUse {
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+/**
+ * An extra column on the stock table, reading one key out of `Item.extra`.
+ *
+ * This is how a subject gets its own field on screen without this plugin
+ * learning about it. Electronics asks for `tensao`; a 3D-printing repository
+ * would ask for `material`, and neither word belongs in here.
+ */
+export interface Column {
+  key: string;
+  label: string;
+}
+
+interface Labels {
+  item: string;
+  qty: string;
+  usedIn: string;
+  blocked: string;
+  runningLow: string;
+  source: string;
+  hint: string;
+}
+
 interface Settings {
   file: string;
   label: string;
@@ -27,7 +49,19 @@ interface Settings {
   /** Frontmatter key the lessons use to list what they consume. */
   key: string;
   root: string;
+  columns: Column[];
+  labels: Labels;
 }
+
+const DEFAULT_LABELS: Labels = {
+  item: "Item",
+  qty: "Qty",
+  usedIn: "Used in",
+  blocked: "blocked",
+  runningLow: "Running low",
+  source: "Source of truth",
+  hint: "The last column shows which lessons each item appears in.",
+};
 
 const DEFAULTS: Settings = {
   file: "inventory.yml",
@@ -35,6 +69,8 @@ const DEFAULTS: Settings = {
   route: "/inventory",
   key: "componentes",
   root: "",
+  columns: [],
+  labels: DEFAULT_LABELS,
 };
 
 export function inventoryPlugin(): Plugin {
@@ -50,7 +86,10 @@ export function inventoryPlugin(): Plugin {
     name: "inventory",
 
     async configure(config) {
-      settings = { ...DEFAULTS, ...(config as Partial<Settings>) };
+      const given = config as Partial<Settings>;
+      // labels merge key by key: a repository that renames one column should
+      // not have to restate the other six
+      settings = { ...DEFAULTS, ...given, labels: { ...DEFAULT_LABELS, ...given.labels } };
       // Loaded once at startup, not per request: a missing file has to stop
       // the server, not turn every lesson into "you own nothing".
       inventory = await readInventory(join(settings.root, settings.file));
@@ -112,7 +151,7 @@ export function inventoryPlugin(): Plugin {
         {
           pattern: new RegExp(`^${settings.route}$`),
           handle: () =>
-            new Response(paginaDoInventario(inventory, lessons, settings), {
+            new Response(renderInventoryPage(inventory, lessons, settings), {
               headers: { "content-type": "text/html; charset=utf-8" },
             }),
         },
@@ -122,7 +161,7 @@ export function inventoryPlugin(): Plugin {
 }
 
 /** The stock table, with what each item is used by. */
-function paginaDoInventario(
+function renderInventoryPage(
   inventory: Map<string, Item>,
   lessons: {
     id: string;
@@ -131,28 +170,41 @@ function paginaDoInventario(
   }[],
   settings: Settings,
 ): string {
+  const { labels, columns } = settings;
+
   const rows = [...inventory.values()]
     .map((item) => {
       const uses = usedBy(item.id, lessons)
         .map((u) => `<a href="/p/${u.id}">${escapeHtml(u.id.split("-")[0]!)}</a>`)
         .join(" ");
-      const blocked = item.blocked ? ' <span class="selo">bloqueado</span>' : "";
+      const blocked = item.blocked
+        ? ` <span class="selo">${escapeHtml(labels.blocked)}</span>`
+        : "";
+      // `?? "—"` and not `|| "—"`: a legitimate 0 or "" would otherwise
+      // render as a dash and read as "this item has no such field"
+      const extra = columns
+        .map((c) => `<td>${escapeHtml(String(item.extra[c.key] ?? "—"))}</td>`)
+        .join("");
 
       return `<tr><td>${escapeHtml(item.name)}${blocked}<br>
         <code style="font-size:12px;color:var(--suave)">${escapeHtml(item.id)}</code></td>
-        <td>${item.qty}</td><td>${escapeHtml(String(item.extra.tensao ?? "—"))}</td>
+        <td>${item.qty}</td>${extra}
         <td>${uses || "—"}</td></tr>`;
     })
     .join("");
 
-  const baixo = checkRunningLow(inventory)
+  const low = checkRunningLow(inventory)
     .map((f) => `<li>${escapeHtml(f.message)}</li>`)
     .join("");
 
+  const headers = [labels.item, labels.qty, ...columns.map((c) => c.label), labels.usedIn]
+    .map((h) => `<th>${escapeHtml(h)}</th>`)
+    .join("");
+
   return `<h1>${escapeHtml(settings.label)}</h1>
-    <p>Fonte da verdade: <code>${escapeHtml(settings.file)}</code>.
-    A última coluna mostra em que lições cada item aparece.</p>
-    ${baixo ? `<div class="cartao"><h3>Acabando</h3><ul>${baixo}</ul></div>` : ""}
-    <table><thead><tr><th>Item</th><th>Qtd</th><th>Tensão</th><th>Usado em</th></tr></thead>
+    <p>${escapeHtml(labels.source)}: <code>${escapeHtml(settings.file)}</code>.
+    ${escapeHtml(labels.hint)}</p>
+    ${low ? `<div class="cartao"><h3>${escapeHtml(labels.runningLow)}</h3><ul>${low}</ul></div>` : ""}
+    <table><thead><tr>${headers}</tr></thead>
     <tbody>${rows}</tbody></table>`;
 }

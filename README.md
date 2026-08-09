@@ -51,10 +51,42 @@ bun add @bancada/inventory
 | `label` | `Parts` | the card and menu title |
 | `route` | `/inventory` | where the inventory page lives |
 | `key` | `componentes` | the frontmatter key a lesson lists its uses under |
+| `columns` | `[]` | extra table columns, each reading one key out of `extra` |
+| `labels` | English | every string the page puts on screen |
 
 The file is loaded once at startup. A missing one stops the server rather than
 becoming an empty inventory — an empty one makes every "you do not own this"
 finding true and useless.
+
+### Your own columns
+
+The stock table shows item, quantity and where each one is used. Anything else
+is your subject's, so you name it:
+
+```json
+"columns": [{ "key": "voltage", "label": "Voltage" }]
+```
+
+Each `key` is read out of the item's `extra`, in order, between quantity and
+the used-in column. An item without that field gets a dash.
+
+### Another language
+
+Every visible string has a key, and overriding one leaves the rest in English:
+
+```json
+"labels": { "item": "Peça", "qty": "Qtd", "usedIn": "Usado em" }
+```
+
+| key | default |
+|---|---|
+| `item` | `Item` |
+| `qty` | `Qty` |
+| `usedIn` | `Used in` |
+| `blocked` | `blocked` |
+| `runningLow` | `Running low` |
+| `source` | `Source of truth` |
+| `hint` | the sentence under the title |
 
 ## The file
 
