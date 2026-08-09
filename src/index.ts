@@ -125,12 +125,12 @@ export function inventoryPlugin(): Plugin {
       const rows = items
         .map(
           (u) =>
-            `<div class="peca"><span>${escapeHtml(u.item?.name ?? u.id)}</span>` +
-            `<span class="selo">${u.qty}×</span></div>`,
+            `<div class="part"><span>${escapeHtml(u.item?.name ?? u.id)}</span>` +
+            `<span class="badge">${u.qty}×</span></div>`,
         )
         .join("");
 
-      return [`<div class="cartao"><h3>${escapeHtml(settings.label)}</h3>${rows}</div>`];
+      return [`<div class="card"><h3>${escapeHtml(settings.label)}</h3>${rows}</div>`];
     },
 
     validate(lesson: Lesson) {
@@ -178,7 +178,7 @@ function renderInventoryPage(
         .map((u) => `<a href="/p/${u.id}">${escapeHtml(u.id.split("-")[0]!)}</a>`)
         .join(" ");
       const blocked = item.blocked
-        ? ` <span class="selo">${escapeHtml(labels.blocked)}</span>`
+        ? ` <span class="badge">${escapeHtml(labels.blocked)}</span>`
         : "";
       // `?? "—"` and not `|| "—"`: a legitimate 0 or "" would otherwise
       // render as a dash and read as "this item has no such field"
@@ -187,7 +187,7 @@ function renderInventoryPage(
         .join("");
 
       return `<tr><td>${escapeHtml(item.name)}${blocked}<br>
-        <code style="font-size:12px;color:var(--suave)">${escapeHtml(item.id)}</code></td>
+        <code style="font-size:12px;color:var(--muted)">${escapeHtml(item.id)}</code></td>
         <td>${item.qty}</td>${extra}
         <td>${uses || "—"}</td></tr>`;
     })
@@ -204,7 +204,7 @@ function renderInventoryPage(
   return `<h1>${escapeHtml(settings.label)}</h1>
     <p>${escapeHtml(labels.source)}: <code>${escapeHtml(settings.file)}</code>.
     ${escapeHtml(labels.hint)}</p>
-    ${low ? `<div class="cartao"><h3>${escapeHtml(labels.runningLow)}</h3><ul>${low}</ul></div>` : ""}
+    ${low ? `<div class="card"><h3>${escapeHtml(labels.runningLow)}</h3><ul>${low}</ul></div>` : ""}
     <table><thead><tr>${headers}</tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
