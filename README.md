@@ -27,6 +27,11 @@ A blocked item is one you own but cannot use yet — a board that came without
 soldered headers, say. It fails the check loudly, because a lesson that depends
 on it is a lesson you cannot do.
 
+## Requirements
+
+**bun 1.3 or newer**, and `bancada` as its host. The package ships TypeScript
+with no build step and reads files through `Bun.file`.
+
 ## Install
 
 ```bash
