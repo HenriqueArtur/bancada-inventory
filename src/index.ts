@@ -10,6 +10,24 @@ import { join } from "node:path";
 import type { Lesson, MenuItem, Plugin, Route } from "bancada";
 import { checkRunningLow, checkStock, type Item, readInventory, usedBy } from "./inventory.ts";
 
+/**
+ * The readers, exported because a repository has its own reasons to ask.
+ *
+ * The plugin answers inside a page build; a `bun run` script that generates a
+ * README, or a check of its own, needs the same stock without standing up a
+ * viewer. Keeping these private forced consumers to write a second parser for
+ * the same file — which is a second answer that can disagree with this one.
+ */
+export {
+  checkRunningLow,
+  checkStock,
+  type Finding,
+  type Item,
+  type ItemUse,
+  readInventory,
+  usedBy,
+} from "./inventory.ts";
+
 export interface ResolvedUse {
   id: string;
   qty: number;
