@@ -1,6 +1,6 @@
 {
   "name": "@bancada/inventory",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Inventory plugin for bancada: what you own, how much, and what each lesson consumes",
   "keywords": [
     "bancada",
